@@ -1,10 +1,30 @@
 import {signIn, signOut, useSession} from "next-auth/react";
 import Head from "next/head";
 import {api} from "~/utils/api";
+import {ReactNode} from "react";
+import Link from "next/link";
+import {Toaster} from "react-hot-toast";
 
 export default function Home() {
     const hello = api.example.hello.useQuery({text: " and Welcome"});
 
+    return (
+        <>
+            <Layout>
+                <div className="flex flex-col items-center gap-2">
+                    <p className="text-2xl text-white">
+                        {hello.data ? hello.data.greeting : "Loading tRPC query..."}
+                    </p>
+                    <AuthShowcase/>
+                </div>
+            </Layout>
+
+        </>
+
+    );
+}
+
+export function Layout({children}: { children: ReactNode }) {
     return (
         <>
             <Head>
@@ -19,13 +39,12 @@ export default function Home() {
                         Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
                     </h1>
                     <div className="flex flex-col items-center gap-2">
-                        <p className="text-2xl text-white">
-                            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-                        </p>
-                        <AuthShowcase/>
+                        {children}
                     </div>
                 </div>
             </main>
+            <Toaster/>
+
         </>
     );
 }
@@ -38,16 +57,14 @@ function AuthShowcase() {
         {enabled: sessionData?.user !== undefined}
     );
 
-    const {data: todos_json} = api.todo.all.useQuery();
     return (
         <div className="flex flex-col items-center justify-center gap-4">
             <p className="text-center text-2xl text-white">
                 {sessionData && <span>Logged in as {sessionData.user?.email}</span>}
                 {secretMessage && <span> - {secretMessage}</span>}
             </p>
-            <p className="text-center text-2xl text-yellow-300">
-                Here are your Todos: {JSON.stringify(todos_json)} .
-            </p>
+            <TodoButton/>
+
             <button
                 className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
                 onClick={sessionData ? () => void signOut() : () => void signIn()}
@@ -56,4 +73,15 @@ function AuthShowcase() {
             </button>
         </div>
     );
+}
+
+
+function TodoButton() {
+    return (
+        <p className="text-center text-2xl text-yellow-300">
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <Link href={"/todo"}>Link to Todos</Link>
+            </button>
+        </p>
+    )
 }
