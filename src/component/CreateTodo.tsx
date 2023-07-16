@@ -10,6 +10,29 @@ export default function CreateTodo() {
         {
             onSettled: async () => {
                 await trpc.todo.all.invalidate()
+            },
+            onMutate: async (newTodo) => {
+                // Cancel any outgoing refetches so they don't overwrite our optimistic update
+                await trpc.todo.all.cancel()
+                // Snapshot previous data
+                const previousTodos = trpc.todo.all.getData()
+                // Optimistically update to new value
+                trpc.todo.all.setData(undefined, (prev) => {
+                    const optimisticTodo = {
+                        id: "optimistic-todo-id",
+                        text: newTodo,
+                        done: false
+                    }
+                    if (!prev) return [optimisticTodo]
+                    return [...prev, optimisticTodo]
+                })
+                setNewTodo("")  // Clear the todo
+                return ({previousTodos})
+            },
+            onError: (error, newTodo, context) => {
+                toast.error("An error occurred when creating todo");
+                setNewTodo(newTodo)  // Unclear the todo
+                trpc.todo.all.setData(undefined, () => context?.previousTodos)
             }
         }
     )
