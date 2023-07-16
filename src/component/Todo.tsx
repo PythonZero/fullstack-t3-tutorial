@@ -1,5 +1,6 @@
 import {Todo} from "~/types";
 import {api} from "~/utils/api";
+import toast from "react-hot-toast";
 
 type TodoProps = {
     todo: Todo
@@ -13,13 +14,51 @@ export default function Todo({todo}: TodoProps) {
         {
             onSettled: async () => {
                 await trpc.todo.all.invalidate()
+            },
+            onMutate: async ({id, done}) => {
+                // Cancel any outgoing refetches so they don't overwrite our optimistic update
+                await trpc.todo.all.cancel()
+                // Snapshot previous data
+                const previousTodos = trpc.todo.all.getData()
+                // Optimistically update to new value
+                trpc.todo.all.setData(undefined, (prev) => {
+                    if (!prev) return previousTodos
+                    return prev.map(t => {
+                        if (t.id === id) {
+                            return {...t, done}
+                        }
+                        return t
+                    })
+                })
+                return ({previousTodos})
+            },
+            onError: (error, newTodo, context) => {
+                toast.error(`An error occurred when setting todo to ${done ? 'done': 'undone'}`);
+                trpc.todo.all.setData(undefined, () => context?.previousTodos)
             }
+
         }
     )
     const {mutate: deleteMutation} = api.todo.delete.useMutation(
         {
             onSettled: async () => {
                 await trpc.todo.all.invalidate()
+            },
+            onMutate: async (deleteId) => {
+                // Cancel any outgoing refetches so they don't overwrite our optimistic update
+                await trpc.todo.all.cancel()
+                // Snapshot previous data
+                const previousTodos = trpc.todo.all.getData()
+                // Optimistically update to new value
+                trpc.todo.all.setData(undefined, (prev) => {
+                    if (!prev) return previousTodos
+                    return prev.filter(t => t.id !== deleteId)
+                })
+                return ({previousTodos})
+            },
+            onError: (error, newTodo, context) => {
+                toast.error("An error occurred when deleting todo");
+                trpc.todo.all.setData(undefined, () => context?.previousTodos)
             }
         }
     )
