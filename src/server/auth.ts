@@ -10,6 +10,9 @@ import {prisma} from "~/server/db";
 import EmailProvider from "next-auth/providers/email"
 import * as process from "process";
 import * as console from "console";
+import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
+
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -49,16 +52,24 @@ export const authOptions: NextAuthOptions = {
     },
     adapter: PrismaAdapter(prisma),
     providers: [
+        GitHubProvider({
+            clientId: process.env.GITHUB_ID as string,
+            clientSecret: process.env.GITHUB_SECRET as string
+        }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
+        }),
         EmailProvider({
             server: {
-                host: process.env.EMAIL_SERVER ,
+                host: process.env.EMAIL_SERVER,
                 port: 587,
                 auth: {
                     user: "apikey",
                     pass: process.env.EMAIL_PASSWORD
                 }
             },
-            from: process.env.EMAIL_FROM ,
+            from: process.env.EMAIL_FROM,
             ...(process.env.NODE_ENV != 'production' ? {
                 sendVerificationRequest({url}) {
                     console.log("LOGIN LINK", url)
