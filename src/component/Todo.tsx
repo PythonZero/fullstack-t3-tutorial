@@ -33,8 +33,13 @@ export default function Todo({todo}: TodoProps) {
                 return ({previousTodos})
             },
             onError: (error, newTodo, context) => {
-                toast.error(`An error occurred when setting todo to ${done ? 'done': 'undone'}`);
+                toast.error(`An error occurred when setting todo to ${done ? 'done' : 'undone'}`);
                 trpc.todo.all.setData(undefined, () => context?.previousTodos)
+            },
+            onSuccess: (err, { done }) => {
+                if (done) {
+                    toast.success('Todo Completed! 🎉')
+                }
             }
 
         }

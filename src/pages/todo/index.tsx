@@ -1,10 +1,10 @@
-import {api} from "~/utils/api";
 import {Layout} from "~/pages";
 import Link from "next/link";
 import Todos from "~/component/Todos";
 import CreateTodo from "~/component/CreateTodo";
+import {withAuthorization} from "~/utils/auth";
 
-export default function TodoDisplay() {
+function TodoDisplay() {
 
     return (
         <Layout>
@@ -29,3 +29,5 @@ function HomeButton() {
         </p>
     )
 }
+
+export default withAuthorization(TodoDisplay)
