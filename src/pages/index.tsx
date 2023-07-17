@@ -4,6 +4,7 @@ import {api} from "~/utils/api";
 import {ReactNode} from "react";
 import Link from "next/link";
 import {Toaster} from "react-hot-toast";
+import { Analytics } from '@vercel/analytics/react';
 
 export default function Home() {
     const hello = api.example.hello.useQuery({text: " and Welcome"});
@@ -40,6 +41,7 @@ export function Layout({children}: { children: ReactNode }) {
                     </h1>
                     <div className="flex flex-col items-center gap-2">
                         {children}
+                        <Analytics />
                     </div>
                 </div>
             </main>
