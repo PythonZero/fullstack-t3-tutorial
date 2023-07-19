@@ -25,10 +25,10 @@ model Example {
 // Necessary for Next auth
 model Account {
   id                String   @id @default(cuid())
-  userId            String
+  userId            String   @map("user_id")
   type              String
   provider          String
-  providerAccountId String
+  providerAccountId String   @map("provider_account_id")
   token_type        String?
   refresh_token     String?  @db.Text
   access_token      String?  @db.Text
@@ -46,8 +46,8 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   userId       String
-  sessionToken String   @db.Text
-  accessToken  String?  @db.Text
+  sessionToken String   @map("session_token") @db.Text
+  accessToken  String?  @map("access_token") @db.Text
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
@@ -58,7 +58,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime?
+  emailVerified DateTime? @map("email_verified")
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
