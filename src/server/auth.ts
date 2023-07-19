@@ -12,6 +12,7 @@ import * as process from "process";
 import * as console from "console";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import {type Provider} from "next-auth/providers";
 
 
 /**
@@ -35,6 +36,43 @@ declare module "next-auth" {
     // }
 }
 
+const providers: Provider[] = [
+    GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID as string,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
+    })
+]
+if (process.env.NODE_ENV !== 'production') {
+    providers.push(
+        GitHubProvider({
+            clientId: process.env.GITHUB_ID as string,
+            clientSecret: process.env.GITHUB_SECRET as string,
+        })
+    );
+    providers.push(
+        EmailProvider({
+            server: {
+                host: process.env.EMAIL_SERVER,
+                port: 587,
+                auth: {
+                    user: "apikey",
+                    pass: process.env.EMAIL_PASSWORD
+                }
+            },
+            from: process.env.EMAIL_FROM,
+            sendVerificationRequest({url}) {
+                console.log("LOGIN LINK", url)
+            },
+
+            // ...(process.env.NODE_ENV !== 'production' ? {
+            //     sendVerificationRequest({url}) {
+            //         console.log("LOGIN LINK", url)
+            //     }
+            // } : {})
+        }))
+
+}
+
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
@@ -51,32 +89,7 @@ export const authOptions: NextAuthOptions = {
         }),
     },
     adapter: PrismaAdapter(prisma),
-    providers: [
-        GitHubProvider({
-            clientId: process.env.GITHUB_ID as string,
-            clientSecret: process.env.GITHUB_SECRET as string
-        }),
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
-        }),
-        EmailProvider({
-            server: {
-                host: process.env.EMAIL_SERVER,
-                port: 587,
-                auth: {
-                    user: "apikey",
-                    pass: process.env.EMAIL_PASSWORD
-                }
-            },
-            from: process.env.EMAIL_FROM,
-            ...(process.env.NODE_ENV != 'production' ? {
-                sendVerificationRequest({url}) {
-                    console.log("LOGIN LINK", url)
-                }
-            } : {})
-        }),
-    ],
+    providers,
 };
 
 /**
